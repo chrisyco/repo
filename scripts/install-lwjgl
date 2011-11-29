@@ -1,0 +1,75 @@
+#!/bin/sh
+
+if [ -z "$1" ]
+then
+    echo "Usage: $0 VERSION" >&2
+    exit 42
+else
+    version="$1"
+fi
+
+lwjgl_dir="lwjgl-$version"
+group_id="org.lwjgl"
+
+copy_jar() {
+    group_id="$1"
+    artifact_id="$2"
+    version="$3"
+    file_name="$4"
+
+    group_dir="$(echo $group_id | sed -e 's/\./\//g')"
+    dest_dir="$group_dir/$artifact_id/$version"
+
+    mkdir -p "$dest_dir"
+    cp -v "$lwjgl_dir/jar/$file_name" "$dest_dir/$artifact_id-$version.jar"
+
+    generate_pom "$group_id" "$artifact_id" "$version" >"$dest_dir/$artifact_id-$version.pom"
+}
+
+generate_pom() {
+    group_id="$1"
+    artifact_id="$2"
+    version="$3"
+
+    cat <<!
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>$group_id</groupId>
+  <artifactId>$artifact_id</artifactId>
+  <version>$version</version>
+  <packaging>jar</packaging>
+</project>
+!
+}
+
+copy_natives() {
+    group_id="$1"
+    artifact_id="$2"
+    version="$3"
+
+    group_dir="$(echo $group_id | sed -e 's/\./\//g')"
+    dest_dir="$group_dir/$artifact_id/$version"
+
+    mkdir -p "$dest_dir"
+    for classifier in $(ls "$lwjgl_dir/native")
+    do
+        dest_jar="$dest_dir/$artifact_id-$version-$classifier.jar"
+        rm "$dest_jar" 2>/dev/null
+        zip -v -9 "$dest_jar" "$lwjgl_dir/native/$classifier/"*
+    done
+
+    generate_pom "$group_id" "$artifact_id" "$version" >"$dest_dir/$artifact_id-$version.pom"
+}
+
+for jar in lwjgl.jar lwjgl_util.jar lwjgl_util_applet.jar jinput.jar
+do
+    artifact_id="$(echo $jar | sed -e 's/_/-/g' -e 's/\..*//')"
+    if echo $artifact_id | grep '^lwjgl\|^jinput' >/dev/null
+    then
+        copy_jar     "$group_id" "$artifact_id" "$version" "$jar"
+    fi
+done
+
+artifact_id="lwjgl-native"
+copy_natives "$group_id" "$artifact_id" "$version"

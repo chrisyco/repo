@@ -1,0 +1,16 @@
+#!/bin/sh
+
+DIR="$(dirname "$(readlink -f $0)")/.."
+echo "Changing to $DIR"
+cd "$DIR"
+
+find . \
+    -type f \
+    -name '*.jar' \
+    -exec scripts/recompress {} \;
+
+find . \
+    -type f \
+    -regextype posix-extended \
+    -regex '.*\.(jar|pom)' \
+    -exec scripts/hash {} \;

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ -z "$1" ]
+then
+    echo "Usage: $0 VERSION" >&2
+    exit 42
+else
+    version="$1"
+fi
+
+wget "http://sourceforge.net/projects/java-game-lib/files/Official%20Releases/LWJGL%20$version/lwjgl-$version.zip/download" -O "lwjgl-$version.zip"
+unzip "lwjgl-$version.zip"
+cd "lwjgl-$version"

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ -z "$1" ]
+then
+    echo "Usage: $0 FILE..."
+    exit 42
+fi
+
+file="$(readlink -f "$1")"
+tmpdir="$file.tmp"
+newfile="$file.new"
+
+# Extract files into tmp folder
+mkdir "$tmpdir"               || exit 1
+unzip -q "$file" -d "$tmpdir" || exit 1
+
+# Compress them into another file
+pushd "$tmpdir"
+zip -r -9 -q "$newfile" *     || exit 1
+popd
+
+# Remove the extracted files
+rm -r "$tmpdir"
+
+old_size=$(stat -c %s "$file")
+new_size=$(stat -c %s "$newfile")
+printf '%40s: %3d%%\n' "$file" $(expr $new_size '*' 100 / $old_size - 100)
+mv "$newfile" "$file"         || exit 1

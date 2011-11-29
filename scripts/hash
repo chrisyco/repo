@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 FILE..."
+    exit 2
+fi
+
+for filename in $*; do
+    echo "$filename"
+    md5sum "$filename" > "$filename.md5"
+    sha1sum "$filename" > "$filename.sha1"
+done
