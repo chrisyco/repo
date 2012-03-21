@@ -6,4 +6,5 @@
   <artifactId>vault</artifactId>
   <version>1.2.12</version>
   <description>Common API for Bukkit plugins</description>
+  <name>Vault</name>
 </project>
